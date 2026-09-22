@@ -126,6 +126,37 @@ providers that failed before it; both are shown in the UI.
 
 ---
 
+## Deploying the frontend to GitHub Pages
+
+`.github/workflows/deploy.yml` builds and publishes `dist/` on every push to
+`main`. Two one-time settings are needed in the repository:
+
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+2. **Settings → Secrets and variables → Actions → New repository secret**, twice:
+   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+
+Push to `main` (or run the workflow manually from the Actions tab) and the site
+lands at `https://<user>.github.io/<repo>/`. Assets are built with a relative
+base, so the same `dist/` also works at a domain root or in any sub-folder —
+a custom domain needs no config change.
+
+Without the secrets the build still succeeds; the deployed app just shows the
+"Supabase is not configured" banner and extraction stays disabled.
+
+### What ends up public
+
+Both `VITE_` values are compiled into the JavaScript bundle — that is normal for
+a Supabase anon key, which is guarded by row-level security. Provider API keys
+are never in the bundle: they live in the edge function's secrets, server side.
+
+Worth knowing: the deployed `extract-drawing` function can be called by anyone
+who reads the anon key out of the bundle, which spends your model quota. If that
+matters, put the function behind Supabase auth (`verify_jwt`) and add a sign-in,
+or narrow `Access-Control-Allow-Origin` in the function from `*` to your Pages
+origin.
+
+---
+
 ## Limits
 
 - PNG · JPEG · WebP · GIF, max 5 MB per image, up to 10 images per extraction
